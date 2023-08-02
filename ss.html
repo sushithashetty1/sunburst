@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sunburst Graph from CSV URL using Plotly</title>
+    <!-- Load Plotly library -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Sunburst Graph from CSV URL using Plotly</h1>
+
+    <!-- Input field for CSV URL -->
+    <label for="csvUrl">Enter CSV URL:</label>
+    <input type="text" id="csvUrl" placeholder="https://gist.githubusercontent.com/sushithashetty1/2345f9abd946fbef4888e47b4f71cb2e/raw/ceea5ec663b2a8f98f9f81a4986d3a1a3afdb1a8/Study.csv">
+    <button onclick="convertToSunburst()">Generate Sunburst Graph</button>
+
+    <!-- Container for the Sunburst graph -->
+    <div id="sunburstGraph" style="width: 100%; height: 500px;"></div>
+
+    <script>
+        // Function to convert CSV URL to Sunburst graph
+        function convertToSunburst() {
+            var csvUrl = document.getElementById('csvUrl').value;
+
+            // Fetch CSV data using Fetch API
+            fetch(csvUrl)
+                .then(response => response.text())
+                .then(csvData => {
+                    // Parse CSV data into arrays
+                    var lines = csvData.trim().split('\n');
+                    var headers = lines[0].split(',');
+
+                    var data = {
+                        type: 'sunburst',
+                        ids: [],
+                        labels: [],
+                        parents: [],
+                        values: []
+                    };
+
+                    for (var i = 1; i < lines.length; i++) {
+                        var rowValues = lines[i].split(',');
+                        var college = rowValues[0];
+                        var dept = rowValues[1];
+                        var doctor = rowValues[2];
+                        var juniorDoctor = rowValues[3];
+                        var patient = parseInt(rowValues[4]);
+
+                        var collegeIndex = data.labels.indexOf(college);
+                        if (collegeIndex === -1) {
+                            collegeIndex = data.ids.length;
+                            data.ids.push(college);
+                            data.labels.push(college);
+                            data.parents.push('');
+                            data.values.push(0);
+                        }
+
+                        var deptIndex = data.labels.indexOf(dept);
+                        if (deptIndex === -1) {
+                            deptIndex = data.ids.length;
+                            data.ids.push(dept);
+                            data.labels.push(dept);
+                            data.parents.push(college);
+                            data.values.push(0);
+                        }
+
+                        var doctorIndex = data.labels.indexOf(doctor);
+                        if (doctorIndex === -1) {
+                            doctorIndex = data.ids.length;
+                            data.ids.push(doctor);
+                            data.labels.push(doctor);
+                            data.parents.push(dept);
+                            data.values.push(0);
+                        }
+
+                        var juniorDoctorIndex = data.labels.indexOf(juniorDoctor);
+                        if (juniorDoctorIndex === -1) {
+                            juniorDoctorIndex = data.ids.length;
+                            data.ids.push(juniorDoctor);
+                            data.labels.push(juniorDoctor);
+                            data.parents.push(doctor);
+                            data.values.push(0);
+                        }
+
+                        var patientIndex = data.ids.length;
+                        data.ids.push(`Patient ${patient}`);
+                        data.labels.push(`Patient ${patient}`);
+                        data.parents.push(juniorDoctor);
+                        data.values.push(patient);
+                    }
+
+                    // Create the layout
+                    var layout = {
+                        title: 'Sunburst Graph from CSV URL',
+                        margin: { t: 40, l: 0, r: 0, b: 0 },
+                    };
+
+                    // Create the Sunburst graph
+                    Plotly.newPlot('sunburstGraph', [data], layout);
+                })
+                .catch(error => {
+                    console.error('Error fetching or parsing CSV data:', error);
+                });
+        }
+    </script>
+</body>
+</html>
